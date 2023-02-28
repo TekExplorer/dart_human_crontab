@@ -46,23 +46,38 @@ class HumanCrontab {
   void _validateRange(String val, {int min = 0, required int max}) {
     if (val == '*') return;
 
-    if (int.tryParse(val) != null) {
-      assert(int.parse(val) >= min && int.parse(val) <= max,
+    final intval = int.tryParse(val);
+    if (intval != null) {
+      assert(intval >= min && intval <= max,
           'Invalid crontab string: must be between $min and $max');
-    } else if (minute.contains('/')) {
-      var split = val.split('/');
-      assert(split.length == 2,
-          'Invalid crontab value: must be in the form of ["*", "*/8", "3/7", "7", "*"]');
-      assert(
-          split[0] == '*' ||
-              (int.parse(split[0]) >= min && int.parse(split[0]) <= max),
-          'Invalid crontab value: must be between $min and $max');
-      assert(int.parse(split[1]) >= min && int.parse(split[1]) <= max,
-          'Invalid crontab value: must be between $min and $max');
-    } else {
-      assert(false,
-          'Invalid crontab string: must be in the form of "* */8 3/7 7 *"');
+      return;
     }
+
+    if (val.contains('/')) {
+      final parts = val.split('/');
+      assert(
+          parts.length == 2, 'Invalid crontab value: must be "*" or a number');
+
+      final left = int.tryParse(parts[0]);
+      final right = int.tryParse(parts[1]);
+
+      if (left == null) {
+        assert(
+            parts[0] == '*', 'Invalid crontab value: must be "*" or a number');
+        return;
+      }
+      assert(right != null, 'Invalid crontab value: must be a number');
+
+      assert(left >= min && left <= max,
+          'Invalid crontab value: must be between $min and $max');
+      assert(right! >= min && right <= max,
+          'Invalid crontab value: must be between $min and $max');
+
+      return;
+    }
+
+    assert(false,
+        'Invalid crontab string: must be a valid crontab format (like "* */8 */7 7 *")');
   }
 
   void _validateCrontabValues() {
