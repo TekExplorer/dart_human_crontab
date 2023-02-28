@@ -31,6 +31,18 @@ class HumanCrontab {
     );
   }
 
+  static HumanCrontab? tryParse(String crontab) {
+    final parts = crontab.split(' ');
+    if (parts.length != 5) return null;
+
+    return HumanCrontab(
+        minute: parts[0],
+        hour: parts[1],
+        dayOfMonth: parts[2],
+        month: parts[3],
+        weekday: parts[4]);
+  }
+
   void _validateRange(String val, {int min = 0, required int max}) {
     if (val == '*') return;
 
