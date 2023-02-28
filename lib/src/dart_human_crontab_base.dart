@@ -1,5 +1,3 @@
-import 'dart:math';
-
 /// A class that translates crontab into something a human can understand.
 class HumanCrontab {
   String minute = '*';
@@ -34,24 +32,24 @@ class HumanCrontab {
   }
 
   void _validateRange(String val, {int min = 0, required int max}) {
-    if (val != '*') {
-      if (int.tryParse(val) != null) {
-        assert(int.parse(val) >= min && int.parse(val) <= max,
-            'Invalid crontab string: must be between $min and $max');
-      } else if (minute.contains('/')) {
-        var split = val.split('/');
-        assert(split.length == 2,
-            'Invalid crontab value: must be in the form of ["*", "*/8", "3/7", "7", "*"]');
-        assert(
-            split[0] == '*' ||
-                (int.parse(split[0]) >= min && int.parse(split[0]) <= max),
-            'Invalid crontab value: must be between $min and $max');
-        assert(int.parse(split[1]) >= min && int.parse(split[1]) <= max,
-            'Invalid crontab value: must be between $min and $max');
-      } else {
-        assert(false,
-            'Invalid crontab string: must be in the form of "* */8 3/7 7 *"');
-      }
+    if (val == '*') return;
+
+    if (int.tryParse(val) != null) {
+      assert(int.parse(val) >= min && int.parse(val) <= max,
+          'Invalid crontab string: must be between $min and $max');
+    } else if (minute.contains('/')) {
+      var split = val.split('/');
+      assert(split.length == 2,
+          'Invalid crontab value: must be in the form of ["*", "*/8", "3/7", "7", "*"]');
+      assert(
+          split[0] == '*' ||
+              (int.parse(split[0]) >= min && int.parse(split[0]) <= max),
+          'Invalid crontab value: must be between $min and $max');
+      assert(int.parse(split[1]) >= min && int.parse(split[1]) <= max,
+          'Invalid crontab value: must be between $min and $max');
+    } else {
+      assert(false,
+          'Invalid crontab string: must be in the form of "* */8 3/7 7 *"');
     }
   }
 
@@ -59,9 +57,9 @@ class HumanCrontab {
     // regex for validating crontab values
     // num(upTo2)ORstar/num OR num(upTo2)ORstar
     // ^([0-9]{1,2}|[\*]\/[0-9])$|^([0-9]{1,2}|[\*])$
+    final regex = RegExp(r'^([0-9]{1,2}|[\*]\/[0-9])$|^([0-9]{1,2}|[\*])$');
     for (String element in [minute, hour, dayOfMonth, month, weekday]) {
-      RegExp regex = RegExp(r'^([0-9]{1,2}|[\*]\/[0-9])$|^([0-9]{1,2}|[\*])$');
-      assert(regex.hasMatch(element), "Invalid crontab value: $element");
+      assert(regex.hasMatch(element), 'Invalid crontab value: $element');
     }
     // minute is between 0 and 59, or is '*', or is '*/n', where n is between 0 and 59, or is n/n where n is between 0 and 59
     _validateRange(minute, min: 0, max: 59);
@@ -77,16 +75,14 @@ class HumanCrontab {
 
   /// crontab to human readable
   String toHuman() {
-    final String minuteHourString = _handleMinuteHour();
-    final String dayOfMonthString = _handleDayOfMonth();
-    final String weekdayString = _handleWeekday();
-    final String monthString = _handleMonth();
-
-    final String finalString =
-        "$minuteHourString $dayOfMonthString $weekdayString $monthString";
+    final minuteHourString = _handleMinuteHour();
+    final dayOfMonthString = _handleDayOfMonth();
+    final weekdayString = _handleWeekday();
+    final monthString = _handleMonth();
 
     // remove excess spaces from empty values
-    return finalString.replaceAll(RegExp(r"\s+"), " ");
+    return '$minuteHourString $dayOfMonthString $weekdayString $monthString'
+        .trim();
   }
 
   String _handleMinuteHour() {
@@ -99,8 +95,8 @@ class HumanCrontab {
 
     String minuteString = '';
     String hourString = '';
-    String? minuteStartingPast;
-    String? hourStartingPast;
+    String minuteStartingPast = '';
+    String hourStartingPast = '';
 
     // handle minute first; also handle steps '*/5'
     if (minute == '*' || minute == '*/1') {
@@ -140,15 +136,17 @@ class HumanCrontab {
       }
     }
 
-    if (minuteStartingPast != null && hourStartingPast != null) {
-      final String hr = hour.split('/')[0];
-      String min = minute.split('/')[0];
-      min.length == 1 ? min = '0$min' : min;
+    if (minuteStartingPast.isEmpty && hourStartingPast.isEmpty) {
+      final hr = hour.split('/')[0];
+      var min = minute.split('/')[0];
+      if (hr != '*' && min != '*') {
+        if (min.length == 1) min = '0$min';
 
-      return '$minuteString $hourString starting from $hr:$min';
-    } else {
-      return '$minuteString $minuteStartingPast $hourString $hourStartingPast';
+        return '$minuteString $hourString starting from $hr:$min';
+      }
     }
+
+    return '$minuteString $minuteStartingPast $hourString $hourStartingPast';
   }
 
   String _handleDayOfMonth() {
@@ -157,18 +155,18 @@ class HumanCrontab {
     } else if (dayOfMonth.contains('/')) {
       // handle 5/7 and */7
       final dayOfMonthParts = dayOfMonth.split('/');
-      final String th = _numberSuffix(dayOfMonthParts[1]);
+      final th = _numberSuffix(dayOfMonthParts[1]);
 
       // handle */7
       if (dayOfMonthParts[0] == '*') {
         return 'on every ${dayOfMonthParts[1]}$th day of the month';
       } else {
-        final String th2 = _numberSuffix(dayOfMonthParts[0]);
+        final th2 = _numberSuffix(dayOfMonthParts[0]);
         return 'on every ${dayOfMonthParts[1]}$th day of the month starting from the ${dayOfMonthParts[0]}$th2';
       }
     } else {
       // normal number
-      final String th = _numberSuffix(dayOfMonth);
+      final th = _numberSuffix(dayOfMonth);
       return 'on the $dayOfMonth$th';
     }
   }
@@ -180,7 +178,7 @@ class HumanCrontab {
     } else if (weekday.contains('/')) {
       // handle 5/7 and */7
       final weekdayParts = weekday.split('/');
-      final String th = _numberSuffix(weekdayParts[1]);
+      final th = _numberSuffix(weekdayParts[1]);
       // handle */7
       if (weekdayParts[0] == '*') {
         return 'on every ${weekdayParts[1]}$th weekday';
@@ -205,19 +203,18 @@ class HumanCrontab {
   ];
 
   String _handleMonth() {
-    final int monthOffset = -1;
-    if (month == '*') {
-      return '';
-    } else if (month.contains('/')) {
+    if (month == '*') return '';
+
+    final monthOffset = -1;
+    if (month.contains('/')) {
       // handle 5/7 and */7
       final monthParts = month.split('/');
-      final String th = _numberSuffix(monthParts[1]);
+      final th = _numberSuffix(monthParts[1]);
       // handle */7
       if (monthParts[0] == '*') {
         return 'in every ${monthParts[1]}$th month';
       } else {
-        final String monthStart =
-            _monthList[int.parse(monthParts[0]) + monthOffset];
+        final monthStart = _monthList[int.parse(monthParts[0]) + monthOffset];
         return 'in every ${monthParts[1]}$th month starting from $monthStart';
       }
     } else {
@@ -256,6 +253,6 @@ class HumanCrontab {
 
   @override
   String toString() {
-    return '$minute $hour $dayOfMonth $month $weekday)';
+    return '$minute $hour $dayOfMonth $month $weekday';
   }
 }
