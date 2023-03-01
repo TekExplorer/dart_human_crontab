@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'crontab_exception.dart';
 
 /// A class that translates crontab into something a human can understand.
 class HumanCrontab {
@@ -18,52 +18,112 @@ class HumanCrontab {
     _validateCrontabValues();
   }
 
-  factory HumanCrontab.parse(String crontab) {
-    List<String> crontabList = crontab.split(' ');
-    if (crontabList.length != 5) {
-      throw ArgumentError('Invalid crontab string: not 5 values');
+  factory HumanCrontab.parse(String value) {
+    final parts = value.split(' ');
+    if (parts.length != 5) {
+      throw CrontabException(
+          'expected 5 crontab expressions; got ${parts.length}');
     }
 
     return HumanCrontab(
-      minute: crontabList[0],
-      hour: crontabList[1],
-      dayOfMonth: crontabList[2],
-      month: crontabList[3],
-      weekday: crontabList[4],
-    );
+        minute: parts[0],
+        hour: parts[1],
+        dayOfMonth: parts[2],
+        month: parts[3],
+        weekday: parts[4]);
   }
 
-  void _validateRange(String val, {int min = 0, required int max}) {
-    if (val != '*') {
-      if (int.tryParse(val) != null) {
-        assert(int.parse(val) >= min && int.parse(val) <= max,
-            'Invalid crontab string: must be between $min and $max');
-      } else if (minute.contains('/')) {
-        var split = val.split('/');
-        assert(split.length == 2,
-            'Invalid crontab value: must be in the form of ["*", "*/8", "3/7", "7", "*"]');
-        assert(
-            split[0] == '*' ||
-                (int.parse(split[0]) >= min && int.parse(split[0]) <= max),
-            'Invalid crontab value: must be between $min and $max');
-        assert(int.parse(split[1]) >= min && int.parse(split[1]) <= max,
-            'Invalid crontab value: must be between $min and $max');
-      } else {
-        assert(false,
-            'Invalid crontab string: must be in the form of "* */8 3/7 7 *"');
-      }
+  static HumanCrontab? tryParse(String value) {
+    try {
+      return HumanCrontab.parse(value);
+    } on CrontabException {
+      return null;
     }
+  }
+
+  static const _weekdayList = <String>[
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ];
+
+  static const _monthList = <String>[
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  void _validateRange(String value, {int min = 0, required int max}) {
+    if (value == '*') return;
+
+    final val = int.tryParse(value);
+    if (val != null) {
+      if (val >= min && val <= max) return;
+      throw CrontabException.invalid('must be between $min and $max');
+    }
+
+    if (value.contains('/')) {
+      final parts = value.split('/');
+      if (parts.length != 2) {
+        throw CrontabException.invalid(
+            'value "$value" must be "*", "*/number" or "number/number"');
+      }
+
+      final left = int.tryParse(parts[0]);
+      final right = int.tryParse(parts[1]);
+
+      if (left == null) {
+        if (parts[0] == '*') return;
+        throw CrontabException.invalid(
+            'left value "${parts[0]}" must be "*" or a number');
+      }
+      if (right == null) {
+        throw CrontabException.invalid('right value must be a number');
+      }
+
+      if (left < min || left > max) {
+        throw CrontabException.invalid(
+            'left value "$left" must be between $min and $max');
+      }
+      if (right < min || right > max) {
+        throw CrontabException.invalid(
+            'right value "$right" must be between $min and $max');
+      }
+
+      return;
+    }
+
+    throw CrontabException(
+        'value "$value" must be in a valid crontab format (like "* */8 */7 7 *)');
   }
 
   void _validateCrontabValues() {
     // regex for validating crontab values
     // num(upTo2)ORstar/num OR num(upTo2)ORstar
-    // ^([0-9]{1,2}|[\*]\/[0-9])$|^([0-9]{1,2}|[\*])$
+    // ^(?:[0-9]{1,2}|(?:\*|[0-9]{1,2})(?:\/[0-9]{1,2})?)$
+    final regex =
+        RegExp(r'^(?:[0-9]{1,2}|(?:\*|[0-9]{1,2})(?:\/[0-9]{1,2})?)$');
     for (String element in [minute, hour, dayOfMonth, month, weekday]) {
-      RegExp regex = RegExp(r'^([0-9]{1,2}|[\*]\/[0-9])$|^([0-9]{1,2}|[\*])$');
-      assert(regex.hasMatch(element), "Invalid crontab value: $element");
+      if (!regex.hasMatch(element)) {
+        throw CrontabException.invalid(element);
+      }
     }
-    // minute is between 0 and 59, or is '*', or is '*/n', where n is between 0 and 59, or is n/n where n is between 0 and 59
+
+    // minute is between 0 and 59, or is '*', or is '*/n', where n is between 0
+    // and 59, or is n/n where n is between 0 and 59
     _validateRange(minute, min: 0, max: 59);
     // hour is between 0 and 23
     _validateRange(hour, min: 0, max: 23);
@@ -77,16 +137,14 @@ class HumanCrontab {
 
   /// crontab to human readable
   String toHuman() {
-    final String minuteHourString = _handleMinuteHour();
-    final String dayOfMonthString = _handleDayOfMonth();
-    final String weekdayString = _handleWeekday();
-    final String monthString = _handleMonth();
-
-    final String finalString =
-        "$minuteHourString $dayOfMonthString $weekdayString $monthString";
+    final minuteHourString = _handleMinuteHour();
+    final dayOfMonthString = _handleDayOfMonth();
+    final weekdayString = _handleWeekday();
+    final monthString = _handleMonth();
 
     // remove excess spaces from empty values
-    return finalString.replaceAll(RegExp(r"\s+"), " ");
+    return '$minuteHourString $dayOfMonthString $weekdayString $monthString'
+        .trim();
   }
 
   String _handleMinuteHour() {
@@ -94,13 +152,14 @@ class HumanCrontab {
     int? tHr = int.tryParse(hour);
 
     if (tMin != null && tHr != null) {
-      return 'At $hour:${minute.length == 1 ? '0$minute' : minute}'; // correctly process single digit minute
+      // correctly process single digit minute
+      return 'At $hour:${minute.length == 1 ? '0$minute' : minute}';
     }
 
     String minuteString = '';
     String hourString = '';
-    String? minuteStartingPast;
-    String? hourStartingPast;
+    String minuteStartingPast = '';
+    String hourStartingPast = '';
 
     // handle minute first; also handle steps '*/5'
     if (minute == '*' || minute == '*/1') {
@@ -140,47 +199,48 @@ class HumanCrontab {
       }
     }
 
-    if (minuteStartingPast != null && hourStartingPast != null) {
-      final String hr = hour.split('/')[0];
-      String min = minute.split('/')[0];
-      min.length == 1 ? min = '0$min' : min;
+    if (minuteStartingPast.isEmpty && hourStartingPast.isEmpty) {
+      final hr = hour.split('/')[0];
+      var min = minute.split('/')[0];
+      if (hr != '*' && min != '*') {
+        if (min.length == 1) min = '0$min';
 
-      return '$minuteString $hourString starting from $hr:$min';
-    } else {
-      return '$minuteString $minuteStartingPast $hourString $hourStartingPast';
+        return '$minuteString $hourString starting from $hr:$min';
+      }
     }
+
+    return '$minuteString $minuteStartingPast $hourString $hourStartingPast';
   }
 
   String _handleDayOfMonth() {
-    if (dayOfMonth == '*') {
-      return '';
-    } else if (dayOfMonth.contains('/')) {
+    if (dayOfMonth == '*') return '';
+
+    if (dayOfMonth.contains('/')) {
       // handle 5/7 and */7
       final dayOfMonthParts = dayOfMonth.split('/');
-      final String th = _numberSuffix(dayOfMonthParts[1]);
+      final th = _numberSuffix(dayOfMonthParts[1]);
 
       // handle */7
       if (dayOfMonthParts[0] == '*') {
         return 'on every ${dayOfMonthParts[1]}$th day of the month';
       } else {
-        final String th2 = _numberSuffix(dayOfMonthParts[0]);
+        final th2 = _numberSuffix(dayOfMonthParts[0]);
         return 'on every ${dayOfMonthParts[1]}$th day of the month starting from the ${dayOfMonthParts[0]}$th2';
       }
-    } else {
-      // normal number
-      final String th = _numberSuffix(dayOfMonth);
-      return 'on the $dayOfMonth$th';
     }
+
+    // normal number
+    final th = _numberSuffix(dayOfMonth);
+    return 'on the $dayOfMonth$th';
   }
 
   String _handleWeekday() {
-    // on
-    if (weekday == '*') {
-      return '';
-    } else if (weekday.contains('/')) {
+    if (weekday == '*') return '';
+
+    if (weekday.contains('/')) {
       // handle 5/7 and */7
       final weekdayParts = weekday.split('/');
-      final String th = _numberSuffix(weekdayParts[1]);
+      final th = _numberSuffix(weekdayParts[1]);
       // handle */7
       if (weekdayParts[0] == '*') {
         return 'on every ${weekdayParts[1]}$th weekday';
@@ -188,58 +248,32 @@ class HumanCrontab {
         final String weekdayStart = _weekdayList[int.parse(weekdayParts[0])];
         return 'on every ${weekdayParts[1]}$th weekday starting from $weekdayStart';
       }
-    } else {
-      // normal weekday
-      return 'on ${_weekdayList[int.parse(weekday)]}';
     }
+
+    // normal weekday
+    return 'on ${_weekdayList[int.parse(weekday)]}';
   }
 
-  final List<String> _weekdayList = [
-    'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-  ];
-
   String _handleMonth() {
-    final int monthOffset = -1;
-    if (month == '*') {
-      return '';
-    } else if (month.contains('/')) {
+    if (month == '*') return '';
+
+    final monthOffset = -1;
+    if (month.contains('/')) {
       // handle 5/7 and */7
       final monthParts = month.split('/');
-      final String th = _numberSuffix(monthParts[1]);
+      final th = _numberSuffix(monthParts[1]);
       // handle */7
       if (monthParts[0] == '*') {
         return 'in every ${monthParts[1]}$th month';
       } else {
-        final String monthStart =
-            _monthList[int.parse(monthParts[0]) + monthOffset];
+        final monthStart = _monthList[int.parse(monthParts[0]) + monthOffset];
         return 'in every ${monthParts[1]}$th month starting from $monthStart';
       }
-    } else {
-      // match number to month
-      return 'in ${_monthList[int.parse(month) + monthOffset]}';
     }
-  }
 
-  final List<String> _monthList = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
+    // match number to month
+    return 'in ${_monthList[int.parse(month) + monthOffset]}';
+  }
 
   String _numberSuffix(String number) {
     switch (number) {
@@ -256,6 +290,6 @@ class HumanCrontab {
 
   @override
   String toString() {
-    return '$minute $hour $dayOfMonth $month $weekday)';
+    return '$minute $hour $dayOfMonth $month $weekday';
   }
 }
