@@ -22,9 +22,8 @@ dart pub add --git-url https://github.com/TekExplorer/dart_human_crontab dart_hu
 import 'package:dart_human_crontab/dart_human_crontab.dart';
 
 void main() {
-  String cron = '30 4 1/2 12 5';
-
+  final cron = '30 4 */1 12 5';
   print(HumanCrontab.parse(cron).toHuman());
-  // At 4:30 on every 2nd day of the month starting from the 1st on Friday in December
+  // At 4:30 on every 1st day of the month on Friday in December
 }
 ```
