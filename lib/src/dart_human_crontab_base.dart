@@ -91,11 +91,11 @@ class HumanCrontab {
         throw CrontabException.invalid('right value must be a number');
       }
 
-      if (left <= min || left >= max) {
+      if (left < min || left > max) {
         throw CrontabException.invalid(
             'left value must be between $min and $max');
       }
-      if (right <= min || right >= max) {
+      if (right < min || right > max) {
         throw CrontabException.invalid(
             'right value must be between $min and $max');
       }
@@ -110,8 +110,9 @@ class HumanCrontab {
   void _validateCrontabValues() {
     // regex for validating crontab values
     // num(upTo2)ORstar/num OR num(upTo2)ORstar
-    // ^([0-9]{1,2}|[\*]\/[0-9])$|^([0-9]{1,2}|[\*])$
-    final regex = RegExp(r'^([0-9]{1,2}|[\*]\/[0-9])$|^([0-9]{1,2}|[\*])$');
+    // ^(?:[0-9]{1,2}|(?:\*|[0-9]{1,2})(?:\/[0-9]{1,2})?)$
+    final regex =
+        RegExp(r'^(?:[0-9]{1,2}|(?:\*|[0-9]{1,2})(?:\/[0-9]{1,2})?)$');
     for (String element in [minute, hour, dayOfMonth, month, weekday]) {
       if (!regex.hasMatch(element)) {
         throw CrontabException.invalid(element);
