@@ -1,4 +1,4 @@
-import 'package:dart_human_crontab/dart_human_crontab.dart';
+import 'package:human_crontab/human_crontab.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -61,6 +61,157 @@ void main() {
       expect(crontab, isNotNull);
       expect(crontab.toString(), equals('* * * * *'));
       expect(crontab!.toHuman(), equals('every minute'));
+    });
+  });
+
+  group('Obscure cron formats', () {
+    // all unusual cron formats should be tested here
+    group('slash format (x/y)', () {
+      test('allows 0/5 for minutes', () {
+        final crontab = HumanCrontab.tryParse('0/5 * * * *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('0/5 * * * *'));
+        // expect(crontab!.toHuman(), equals('every 5 minutes'));
+      });
+
+      test('allows 0/5 for hours', () {
+        final crontab = HumanCrontab.tryParse('* 0/5 * * *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* 0/5 * * *'));
+        // expect(crontab!.toHuman(), equals('every 5 hours'));
+      });
+
+      test('allows 0/5 for days of month', () {
+        final crontab = HumanCrontab.tryParse('* * 0/5 * *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* * 0/5 * *'));
+        // expect(crontab!.toHuman(), equals('every 5 days of the month'));
+      });
+
+      test('allows 0/5 for months', () {
+        final crontab = HumanCrontab.tryParse('* * * 0/5 *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* * * 0/5 *'));
+        // expect(crontab!.toHuman(), equals('every 5 months'));
+      });
+
+      test('allows 0/5 for days of week', () {
+        final crontab = HumanCrontab.tryParse('* * * * 0/5');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* * * * 0/5'));
+        // expect(crontab!.toHuman(), equals('every 5 days of the week'));
+      });
+
+      test('allows 0/5 for minutes and hours', () {
+        final crontab = HumanCrontab.tryParse('0/5 0/5 * * *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('0/5 0/5 * * *'));
+        // expect(crontab!.toHuman(), equals('every 5 minutes and every 5 hours'));
+      });
+
+      test('allows 0/5 for minutes and days of month', () {
+        final crontab = HumanCrontab.tryParse('0/5 * 0/5 * *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('0/5 * 0/5 * *'));
+        // expect(crontab!.toHuman(),
+        //     equals('every 5 minutes and every 5 days of the month'));
+      });
+
+      test('allows 0/5 for minutes and months', () {
+        final crontab = HumanCrontab.tryParse('0/5 * * 0/5 *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('0/5 * * 0/5 *'));
+        // expect(
+        //     crontab!.toHuman(), equals('every 5 minutes and every 5 months'));
+      });
+
+      test('allows 0/5 for minutes and days of week', () {
+        final crontab = HumanCrontab.tryParse('0/5 * * * 0/5');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('0/5 * * * 0/5'));
+        // expect(crontab!.toHuman(),
+        //     equals('every 5 minutes and every 5 days of the week'));
+      });
+
+      test('allows 0/5 for hours and days of month', () {
+        final crontab = HumanCrontab.tryParse('* 0/5 0/5 * *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* 0/5 0/5 * *'));
+        // expect(crontab!.toHuman(),
+        //     equals('every 5 hours and every 5 days of the month'));
+      });
+
+      test('allows 0/5 for hours and months', () {
+        final crontab = HumanCrontab.tryParse('* 0/5 * 0/5 *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* 0/5 * 0/5 *'));
+        // expect(crontab!.toHuman(), equals('every 5 hours and every 5 months'));
+      });
+
+      test('allows 0/5 for hours and days of week', () {
+        final crontab = HumanCrontab.tryParse('* 0/5 * * 0/5');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* 0/5 * * 0/5'));
+        // expect(crontab!.toHuman(),
+        //     equals('every 5 hours and every 5 days of the week'));
+      });
+
+      test('allows 0/5 for days of month and months', () {
+        final crontab = HumanCrontab.tryParse('* * 0/5 0/5 *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* * 0/5 0/5 *'));
+        // expect(crontab!.toHuman(),
+        //     equals('every 5 days of the month and every 5 months'));
+      });
+    });
+
+    group('dash format (x-y)', () {
+      test('allows 0-5 for minutes', () {
+        final crontab = HumanCrontab.tryParse('0-5 * * * *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('0-5 * * * *'));
+        // expect(crontab!.toHuman(), equals('every minute between 0 and 5'));
+      });
+
+      test('allows 0-5 for hours', () {
+        final crontab = HumanCrontab.tryParse('* 0-5 * * *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* 0-5 * * *'));
+        // expect(crontab!.toHuman(), equals('every hour between 0 and 5'));
+      });
+
+      test('allows 0-5 for days of month', () {
+        final crontab = HumanCrontab.tryParse('* * 0-5 * *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* * 0-5 * *'));
+        // expect(crontab!.toHuman(),
+        //     equals('every day of the month between 0 and 5'));
+      });
+
+      test('allows 0-5 for months', () {
+        final crontab = HumanCrontab.tryParse('* * * 0-5 *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* * * 0-5 *'));
+        // expect(crontab!.toHuman(), equals('every month between 0 and 5'));
+      });
+
+      test('allows 0-5 for days of week', () {
+        final crontab = HumanCrontab.tryParse('* * * * 0-5');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('* * * * 0-5'));
+        // expect(crontab!.toHuman(),
+        //     equals('every day of the week between 0 and 5'));
+      });
+
+      test('allows 0-5 for minutes and hours', () {
+        final crontab = HumanCrontab.tryParse('0-5 0-5 * * *');
+        expect(crontab, isNotNull);
+        expect(crontab.toString(), equals('0-5 0-5 * * *'));
+        // expect(
+        //     crontab!.toHuman(),
+        //     equals(
+        //         'every minute between 0 and 5 and every hour between 0 and 5'));
+      });
     });
   });
 }
