@@ -79,7 +79,7 @@ class HumanCrontab {
       final parts = value.split('/');
       if (parts.length != 2) {
         throw CrontabException.invalid(
-            'must be "*", "*/number" or "number/number"');
+            'value "$value" must be "*", "*/number" or "number/number"');
       }
 
       final left = int.tryParse(parts[0]);
@@ -87,7 +87,8 @@ class HumanCrontab {
 
       if (left == null) {
         if (parts[0] == '*') return;
-        throw CrontabException.invalid('left value must be "*" or a number');
+        throw CrontabException.invalid(
+            'left value "${parts[0]}" must be "*" or a number');
       }
       if (right == null) {
         throw CrontabException.invalid('right value must be a number');
@@ -95,18 +96,18 @@ class HumanCrontab {
 
       if (left < min || left > max) {
         throw CrontabException.invalid(
-            'left value must be between $min and $max');
+            'left value "$left" must be between $min and $max');
       }
       if (right < min || right > max) {
         throw CrontabException.invalid(
-            'right value must be between $min and $max');
+            'right value "$right" must be between $min and $max');
       }
 
       return;
     }
 
     throw CrontabException(
-        'value must be in a valid crontab format (like "* */8 */7 7 *)');
+        'value "$value" must be in a valid crontab format (like "* */8 */7 7 *)');
   }
 
   void _validateCrontabValues() {
