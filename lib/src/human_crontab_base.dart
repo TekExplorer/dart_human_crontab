@@ -1,13 +1,12 @@
-
 import 'crontab_exception.dart';
 
 /// A class that translates crontab into something a human can understand.
 class HumanCrontab {
-  String minute = '*';
-  String hour = '*';
-  String dayOfMonth = '*';
-  String month = '*';
-  String weekday = '*';
+  final String minute;
+  final String hour;
+  final String dayOfMonth;
+  final String month;
+  final String weekday;
 
   HumanCrontab({
     required this.minute,
@@ -277,12 +276,15 @@ class HumanCrontab {
   }
 
   String _numberSuffix(String number) {
-    switch (number) {
-      case '1':
+    final n = int.parse(number);
+    if (n >= 11 && n <= 13) return 'th';
+
+    switch (n % 10) {
+      case 1:
         return 'st';
-      case '2':
+      case 2:
         return 'nd';
-      case '3':
+      case 3:
         return 'rd';
       default:
         return 'th';
