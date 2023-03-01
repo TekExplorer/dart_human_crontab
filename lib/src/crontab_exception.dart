@@ -5,10 +5,6 @@ class CrontabException implements Exception {
 
   const CrontabException(this.message);
 
-  factory CrontabException.failed(String message) {
-    return CrontabException('failed to parse crontab: $message');
-  }
-
   factory CrontabException.invalid(String message) {
     return CrontabException('invalid crontab value: $message');
   }

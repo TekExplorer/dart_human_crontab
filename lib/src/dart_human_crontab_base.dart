@@ -21,7 +21,8 @@ class HumanCrontab {
   factory HumanCrontab.parse(String value) {
     final parts = value.split(' ');
     if (parts.length != 5) {
-      throw CrontabException.failed('expected 5 crontab expressions');
+      throw CrontabException(
+          'expected 5 crontab expressions; got ${parts.length}');
     }
 
     return HumanCrontab(
@@ -77,7 +78,8 @@ class HumanCrontab {
     if (value.contains('/')) {
       final parts = value.split('/');
       if (parts.length != 2) {
-        throw CrontabException.invalid('must be "*" or a number');
+        throw CrontabException.invalid(
+            'must be "*", "*/number" or "number/number"');
       }
 
       final left = int.tryParse(parts[0]);
@@ -103,8 +105,8 @@ class HumanCrontab {
       return;
     }
 
-    throw CrontabException.failed(
-        'must be in a valid crontab format (like "* */8 */7 7 *)');
+    throw CrontabException(
+        'value must be in a valid crontab format (like "* */8 */7 7 *)');
   }
 
   void _validateCrontabValues() {
