@@ -18,24 +18,11 @@ class HumanCrontab {
     _validateCrontabValues();
   }
 
-  factory HumanCrontab.parse(String crontab) {
-    List<String> crontabList = crontab.split(' ');
-    if (crontabList.length != 5) {
-      throw ArgumentError('Invalid crontab string: not 5 values');
+  factory HumanCrontab.parse(String value) {
+    final parts = value.split(' ');
+    if (parts.length != 5) {
+      throw CrontabException.failed('expected 5 crontab expressions');
     }
-
-    return HumanCrontab(
-      minute: crontabList[0],
-      hour: crontabList[1],
-      dayOfMonth: crontabList[2],
-      month: crontabList[3],
-      weekday: crontabList[4],
-    );
-  }
-
-  static HumanCrontab? tryParse(String crontab) {
-    final parts = crontab.split(' ');
-    if (parts.length != 5) return null;
 
     return HumanCrontab(
         minute: parts[0],
@@ -43,6 +30,14 @@ class HumanCrontab {
         dayOfMonth: parts[2],
         month: parts[3],
         weekday: parts[4]);
+  }
+
+  static HumanCrontab? tryParse(String value) {
+    try {
+      return HumanCrontab.parse(value);
+    } on CrontabException {
+      return null;
+    }
   }
 
   static const _weekdayList = <String>[
@@ -108,7 +103,7 @@ class HumanCrontab {
       return;
     }
 
-    throw CrontabException.invalid(
+    throw CrontabException.failed(
         'must be in a valid crontab format (like "* */8 */7 7 *)');
   }
 
