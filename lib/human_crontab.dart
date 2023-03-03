@@ -2,5 +2,4 @@
 /// strings.
 library human_crontab;
 
-export 'src/crontab_exception.dart';
-export 'src/human_crontab_base.dart';
+export 'src/human_crontab.dart' show HumanCrontab;
