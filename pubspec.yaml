@@ -1,11 +1,13 @@
 name: human_crontab
 description: |
   A library for parsing and formatting crontab patterns into a human-readable strings.
+repository: https://github.com/TekExplorer/dart_human_crontab
+
 
 version: 1.0.0
 # homepage: https://www.example.com
 environment:
-  sdk: '>=2.17.0 <3.0.0'
+  sdk: '>=2.17.0 <4.0.0'
 
 dev_dependencies:
   lints: ^1.0.0
