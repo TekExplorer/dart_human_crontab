@@ -6,20 +6,20 @@ Add it to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_human_crontab:
+  human_crontab:
     git: https://github.com/TekExplorer/dart_human_crontab
 ```
 
 or install via pub:
 
 ```sh
-dart pub add --git-url https://github.com/TekExplorer/dart_human_crontab dart_human_crontab
+dart pub add --git-url https://github.com/TekExplorer/dart_human_crontab human_crontab
 ```
 
 ## Usage
 
 ```dart
-import 'package:dart_human_crontab/dart_human_crontab.dart';
+import 'package:human_crontab/human_crontab.dart';
 
 void main() {
   final cron = '30 4 */1 12 5';
