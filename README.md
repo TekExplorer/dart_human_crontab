@@ -7,13 +7,13 @@ Add it to `pubspec.yaml`:
 ```yaml
 dependencies:
   human_crontab:
-    git: https://github.com/TekExplorer/human_crontab
+    git: https://github.com/TekExplorer/dart_human_crontab
 ```
 
 or install via pub:
 
 ```sh
-dart pub add --git-url https://github.com/TekExplorer/human_crontab human_crontab
+dart pub add --git-url https://github.com/TekExplorer/dart_human_crontab human_crontab
 ```
 
 ## Usage
