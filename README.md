@@ -1,3 +1,5 @@
+# Dart Human Crontab
+
 A package to convert crontabs to a human readable format much like crontab.guru
 
 ## Getting started
@@ -6,14 +8,13 @@ Add it to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  human_crontab:
-    git: https://github.com/TekExplorer/dart_human_crontab
+  human_crontab: ^1.0.0
 ```
 
 or install via pub:
 
 ```sh
-dart pub add --git-url https://github.com/TekExplorer/dart_human_crontab human_crontab
+dart pub add human_crontab
 ```
 
 ## Usage
